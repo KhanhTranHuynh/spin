@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vòng Quay May Mắn</title>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;600;800&family=Be+Vietnam+Pro:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f0c1a;
+    --surface: #1a1628;
+    --surface2: #231e35;
+    --border: rgba(255,255,255,0.08);
+    --text: #f0eaff;
+    --muted: rgba(240,234,255,0.5);
+    --accent: #c084fc;
+    --accent2: #f472b6;
+    --gold: #fbbf24;
+    --radius: 14px;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { font-size: 16px; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Be Vietnam Pro', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 32px 16px 48px;
+    background-image:
+      radial-gradient(ellipse at 20% 10%, rgba(192,132,252,0.12) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 80%, rgba(244,114,182,0.1) 0%, transparent 50%);
+  }
+
+  h1 {
+    font-family: 'Baloo 2', cursive;
+    font-size: clamp(24px, 5vw, 36px);
+    font-weight: 800;
+    background: linear-gradient(135deg, #c084fc, #f472b6, #fbbf24);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 4px;
+    letter-spacing: -0.02em;
+  }
+  .subtitle {
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 32px;
+    letter-spacing: 0.04em;
+  }
+
+  .layout {
+    display: flex;
+    gap: 28px;
+    width: 100%;
+    max-width: 900px;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  /* ── Wheel side ── */
+  .wheel-side {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    flex: 0 0 320px;
+  }
+
+  .wheel-wrap {
+    position: relative;
+    width: 300px;
+    height: 300px;
+  }
+  #wheel { display: block; }
+
+  .pointer {
+    position: absolute;
+    top: -18px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 12px solid transparent;
+    border-right: 12px solid transparent;
+    border-top: 28px solid var(--gold);
+    filter: drop-shadow(0 2px 6px rgba(251,191,36,0.6));
+    z-index: 10;
+  }
+
+  .spin-btn {
+    width: 100%;
+    padding: 14px 0;
+    font-family: 'Baloo 2', cursive;
+    font-size: 18px;
+    font-weight: 700;
+    border: none;
+    border-radius: var(--radius);
+    background: linear-gradient(135deg, #c084fc, #f472b6);
+    color: #fff;
+    cursor: pointer;
+    letter-spacing: 0.04em;
+    transition: opacity .2s, transform .15s;
+    box-shadow: 0 4px 20px rgba(192,132,252,0.35);
+  }
+  .spin-btn:hover:not(:disabled) { opacity: .9; transform: translateY(-1px); }
+  .spin-btn:active:not(:disabled) { transform: scale(.97); }
+  .spin-btn:disabled { opacity: .45; cursor: not-allowed; }
+
+  .result-card {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 18px;
+    text-align: center;
+  }
+  .result-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 4px; }
+  .result-val {
+    font-family: 'Baloo 2', cursive;
+    font-size: 30px;
+    font-weight: 800;
+    min-height: 40px;
+    background: linear-gradient(135deg, #c084fc, #f472b6, #fbbf24);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .history {
+    width: 100%;
+    font-size: 12px;
+    color: var(--muted);
+    min-height: 20px;
+    text-align: center;
+    line-height: 1.8;
+  }
+
+  /* ── Settings side ── */
+  .settings-side {
+    flex: 1;
+    min-width: 260px;
+    max-width: 460px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+
+  .sec-title {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    color: var(--muted);
+    margin-bottom: 4px;
+  }
+
+  .total-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: -10px;
+  }
+  .total-row strong { color: var(--accent); }
+
+  .item-list { display: flex; flex-direction: column; gap: 10px; }
+
+  .item-row {
+    display: grid;
+    grid-template-columns: auto 1fr auto 36px;
+    align-items: center;
+    gap: 8px;
+    background: var(--surface2);
+    border-radius: 10px;
+    padding: 8px 12px;
+    transition: background .15s;
+  }
+
+  .swatch {
+    width: 14px;
+    height: 14px;
+    border-radius: 4px;
+    flex-shrink: 0;
+  }
+
+  .item-name {
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 120px;
+  }
+  .item-name:hover { color: var(--accent); }
+
+  .slider-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .slider-wrap input[type=range] {
+    flex: 1;
+    -webkit-appearance: none;
+    height: 4px;
+    border-radius: 2px;
+    background: rgba(255,255,255,0.12);
+    outline: none;
+    cursor: pointer;
+  }
+  .slider-wrap input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--accent);
+    cursor: pointer;
+    box-shadow: 0 0 6px rgba(192,132,252,0.5);
+  }
+  .weight-num {
+    font-size: 12px;
+    font-weight: 600;
+    min-width: 28px;
+    text-align: right;
+    color: var(--text);
+  }
+  .pct-badge {
+    font-size: 10px;
+    color: var(--muted);
+    min-width: 30px;
+    text-align: right;
+  }
+
+  .del-btn {
+    width: 28px;
+    height: 28px;
+    border-radius: 7px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+    transition: background .15s, color .15s;
+  }
+  .del-btn:hover { background: rgba(244,114,182,0.15); color: var(--accent2); }
+
+  .add-row {
+    display: flex;
+    gap: 8px;
+    margin-top: -4px;
+  }
+  .add-row input[type=text] {
+    flex: 1;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 8px 12px;
+    font-family: 'Be Vietnam Pro', sans-serif;
+    font-size: 14px;
+    color: var(--text);
+    outline: none;
+    transition: border-color .15s;
+  }
+  .add-row input[type=text]::placeholder { color: rgba(255,255,255,0.25); }
+  .add-row input[type=text]:focus { border-color: var(--accent); }
+
+  .add-btn {
+    padding: 8px 16px;
+    border-radius: 10px;
+    border: 1px solid rgba(192,132,252,0.4);
+    background: rgba(192,132,252,0.1);
+    color: var(--accent);
+    font-family: 'Be Vietnam Pro', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background .15s;
+    white-space: nowrap;
+  }
+  .add-btn:hover { background: rgba(192,132,252,0.2); }
+
+  /* Palette */
+  .palette-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .pal-btn {
+    display: flex;
+    gap: 2px;
+    align-items: center;
+    padding: 5px 8px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    cursor: pointer;
+    transition: border-color .15s;
+  }
+  .pal-btn:hover, .pal-btn.active { border-color: var(--accent); }
+  .pal-swatch { width: 10px; height: 10px; border-radius: 2px; }
+  .pal-name { font-size: 11px; color: var(--muted); margin-left: 4px; }
+
+  /* confetti */
+  @keyframes confetti-fall {
+    0% { transform: translateY(-20px) rotate(0deg); opacity: 1; }
+    100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+  }
+  .confetti-piece {
+    position: fixed;
+    width: 8px;
+    height: 8px;
+    border-radius: 2px;
+    pointer-events: none;
+    animation: confetti-fall linear forwards;
+    z-index: 9999;
+  }
+
+  @media (max-width: 680px) {
+    .wheel-side { flex: 0 0 100%; }
+    .settings-side { max-width: 100%; }
+  }
+</style>
+</head>
+<body>
+
+<h1>🎡 Vòng Quay May Mắn</h1>
+<p class="subtitle">Các ô bằng nhau — Kết quả hoàn toàn ngẫu nhiên</p>
+
+<div class="layout">
+
+  <div class="wheel-side">
+    <div class="wheel-wrap">
+      <div class="pointer"></div>
+      <canvas id="wheel" width="300" height="300"></canvas>
+    </div>
+    <button class="spin-btn" id="spinBtn" onclick="spin()">🎲 QUAY NGAY!</button>
+    <div class="result-card">
+      <div class="result-label">Kết quả</div>
+      <div class="result-val" id="resultVal">— — —</div>
+    </div>
+    <div class="history" id="historyList"></div>
+  </div>
+
+  <div class="settings-side">
+    <div>
+      <div class="sec-title">Danh sách các ô</div>
+    </div>
+
+    <div class="item-list" id="itemList"></div>
+
+    <div class="add-row">
+      <input type="text" id="newLabel" placeholder="Tên ô mới (emoji OK)..." maxlength="20">
+      <button class="add-btn" onclick="addItem()">+ Thêm</button>
+    </div>
+
+    <div>
+      <div class="sec-title" style="margin-bottom:8px">Bảng màu</div>
+      <div class="palette-row" id="palettePicker"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ╔══════════════════════════════════════════════════════╗
+// ║              CONFIG — CHỈ ADMIN CHỈNH               ║
+// ║  weight càng cao → xác suất trúng càng lớn          ║
+// ║  Người dùng KHÔNG thấy weight, chỉ thấy tên ô       ║
+// ╚══════════════════════════════════════════════════════╝
+const CONFIG = {
+  // Có cho người dùng thêm/xóa/sửa tên ô không?
+  allowUserEdit: true,
+
+  // Danh sách ô: { label, weight }
+  // weight là số tương đối, không cần tổng = 100
+  items: [
+    { label: "🎁 Quà lớn",   weight: 1  },
+    { label: "💰 100k",       weight: 1 },
+    { label: "🎀 Quà nhỏ",    weight: 1 },
+    { label: "⭐ Thêm lượt",  weight: 1 },
+    { label: "❌ Mất lượt",   weight: 1 },
+    { label: "🔁 Quay lại",   weight: 95 },
+  ],
+
+  // Bảng màu mặc định: "Galaxy" | "Lửa" | "Biển" | "Tươi" | "Pastel"
+  defaultPalette: "Galaxy",
+};
+// ══════════════════════════════════════════════════════
+
+const PALETTES = {
+  "Galaxy":  ["#c084fc","#f472b6","#60a5fa","#34d399","#fbbf24","#f87171","#a78bfa","#fb923c"],
+  "Lửa":     ["#ef4444","#f97316","#fbbf24","#dc2626","#b91c1c","#f59e0b","#ef4444","#ff6b6b"],
+  "Biển":    ["#0ea5e9","#06b6d4","#3b82f6","#2563eb","#0284c7","#0891b2","#1d4ed8","#38bdf8"],
+  "Tươi":    ["#22c55e","#84cc16","#10b981","#a3e635","#16a34a","#65a30d","#059669","#4ade80"],
+  "Pastel":  ["#fca5a5","#fdba74","#fde68a","#a7f3d0","#bae6fd","#c4b5fd","#f9a8d4","#d9f99d"],
+};
+
+let palette = PALETTES[CONFIG.defaultPalette] || Object.values(PALETTES)[0];
+let items = CONFIG.items.map(i => ({ ...i }));
+let spinning = false, angle = 0, history = [];
+
+function totalW(){ return items.reduce((s,i)=>s+i.weight, 0); }
+function color(i){ return palette[i % palette.length]; }
+
+function drawWheel(){
+  const c = document.getElementById('wheel');
+  const ctx = c.getContext('2d');
+  const cx=150, cy=150, r=142;
+  ctx.clearRect(0,0,300,300);
+
+  if(!items.length) return;
+
+  const n = items.length;
+  const sectorAngle = 2 * Math.PI / n; // ← equal sectors
+
+  for(let i = 0; i < n; i++){
+    const start = -Math.PI/2 + angle + i * sectorAngle;
+    const end   = start + sectorAngle;
+
+    // Sector fill
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.arc(cx, cy, r, start, end);
+    ctx.closePath();
+    ctx.fillStyle = color(i);
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(15,12,26,0.6)';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Label
+    const mid = start + sectorAngle / 2;
+    const tx = cx + Math.cos(mid) * r * 0.65;
+    const ty = cy + Math.sin(mid) * r * 0.65;
+    ctx.save();
+    ctx.translate(tx, ty);
+    ctx.rotate(mid + Math.PI/2);
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillStyle = '#fff';
+    ctx.shadowColor = 'rgba(0,0,0,0.5)';
+    ctx.shadowBlur = 4;
+    ctx.font = `bold 12px 'Be Vietnam Pro', sans-serif`;
+    const lbl = items[i].label.length > 10 ? items[i].label.slice(0,9)+'…' : items[i].label;
+    // Label only — no % shown to users
+    ctx.fillText(lbl, 0, 0);
+    ctx.restore();
+  }
+
+  // Center circle
+  ctx.beginPath();
+  ctx.arc(cx, cy, 18, 0, 2*Math.PI);
+  ctx.fillStyle = '#1a1628';
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  // Glow ring
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, 0, 2*Math.PI);
+  ctx.strokeStyle = 'rgba(192,132,252,0.3)';
+  ctx.lineWidth = 3;
+  ctx.stroke();
+}
+
+function spin(){
+  if(spinning || items.length < 2) return;
+  spinning = true;
+  document.getElementById('spinBtn').disabled = true;
+  document.getElementById('resultVal').textContent = '...';
+
+  // ── Weighted random pick (independent of visual sector size) ──
+  const total = totalW();
+  const rand = Math.random() * total;
+  let cum = 0, targetIdx = 0;
+  for(let i = 0; i < items.length; i++){
+    cum += items[i].weight;
+    if(rand < cum){ targetIdx = i; break; }
+  }
+
+  // ── Spin wheel so the equal sector for targetIdx ends under the pointer ──
+  const n = items.length;
+  const sectorAngle = 2 * Math.PI / n;
+  // Middle of target sector in wheel-local coords (before rotation)
+  const sectorMid = -Math.PI/2 + targetIdx * sectorAngle + sectorAngle / 2;
+  // We want sectorMid + angle ≡ -Math.PI/2 (pointing straight up)
+  // i.e. angle_final = -Math.PI/2 - sectorMid  (mod 2π)
+  const targetAngle = -Math.PI/2 - sectorMid;
+  const fullSpins = (6 + Math.floor(Math.random() * 4)) * 2 * Math.PI;
+  const currentNorm = ((angle % (2*Math.PI)) + 2*Math.PI) % (2*Math.PI);
+  const targetNorm  = ((targetAngle % (2*Math.PI)) + 2*Math.PI) % (2*Math.PI);
+  const delta = (targetNorm - currentNorm + 2*Math.PI) % (2*Math.PI);
+  const totalRotation = fullSpins + delta;
+  const startAngle = angle;
+  const dur = 3800;
+  const start = performance.now();
+
+  function easeOut(t){ return 1 - Math.pow(1-t, 4.5); }
+
+  function frame(now){
+    const t = Math.min((now - start) / dur, 1);
+    angle = startAngle + totalRotation * easeOut(t);
+    drawWheel();
+    if(t < 1){
+      requestAnimationFrame(frame);
+    } else {
+      spinning = false;
+      document.getElementById('spinBtn').disabled = false;
+      const winner = items[targetIdx].label;
+      document.getElementById('resultVal').textContent = winner;
+      history.unshift(winner);
+      if(history.length > 12) history.pop();
+      document.getElementById('historyList').innerHTML =
+        history.map((h,i) => `<span style="opacity:${Math.max(0.2, 1-i*0.08)};margin:0 4px">${h}</span>`).join(' · ');
+      launchConfetti();
+    }
+  }
+  requestAnimationFrame(frame);
+}
+
+function launchConfetti(){
+  const colors = ['#c084fc','#f472b6','#fbbf24','#60a5fa','#34d399'];
+  for(let i=0;i<40;i++){
+    const el = document.createElement('div');
+    el.className = 'confetti-piece';
+    el.style.left = Math.random()*100+'vw';
+    el.style.top = '-20px';
+    el.style.background = colors[Math.floor(Math.random()*colors.length)];
+    el.style.animationDuration = (1.5 + Math.random()*2)+'s';
+    el.style.animationDelay = (Math.random()*0.5)+'s';
+    document.body.appendChild(el);
+    el.addEventListener('animationend', ()=>el.remove());
+  }
+}
+
+function renderItems(){
+  document.getElementById('itemList').innerHTML = items.map((item,i) => `
+    <div class="item-row" style="grid-template-columns: auto 1fr auto;">
+      <span class="swatch" style="background:${color(i)}"></span>
+      <span class="item-name"
+        ${CONFIG.allowUserEdit ? `onclick="editLabel(${i})" title="Click để đổi tên" style="cursor:pointer"` : ''}
+      >${item.label}</span>
+      ${CONFIG.allowUserEdit
+        ? `<button class="del-btn" onclick="removeItem(${i})" title="Xóa ô">✕</button>`
+        : ''}
+    </div>
+  `).join('');
+
+  // Show/hide add row
+  const addRow = document.querySelector('.add-row');
+  if(addRow) addRow.style.display = CONFIG.allowUserEdit ? 'flex' : 'none';
+
+  drawWheel();
+}
+
+function removeItem(i){
+  if(items.length <= 2){ alert('Cần ít nhất 2 ô!'); return; }
+  items.splice(i,1); renderItems();
+}
+function addItem(){
+  const inp = document.getElementById('newLabel');
+  const lbl = inp.value.trim();
+  if(!lbl) return;
+  items.push({label: lbl, weight: 10});
+  inp.value = '';
+  renderItems();
+}
+function editLabel(i){
+  const n = prompt('Đổi tên ô:', items[i].label);
+  if(n && n.trim()){ items[i].label = n.trim(); renderItems(); }
+}
+
+function buildPalettes(){
+  const div = document.getElementById('palettePicker');
+  div.innerHTML = Object.entries(PALETTES).map(([name, colors]) => `
+    <button class="pal-btn ${palette === colors ? 'active':''}" onclick="setPalette('${name}')">
+      ${colors.slice(0,5).map(c => `<span class="pal-swatch" style="background:${c}"></span>`).join('')}
+      <span class="pal-name">${name}</span>
+    </button>
+  `).join('');
+}
+function setPalette(name){
+  palette = PALETTES[name];
+  buildPalettes();
+  renderItems();
+}
+
+document.getElementById('newLabel').addEventListener('keydown', e => {
+  if(e.key === 'Enter') addItem();
+});
+
+buildPalettes();
+renderItems();
+</script>
+</body>
+</html>
